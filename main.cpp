@@ -27,7 +27,7 @@ int main()
     {
         if (dev.flag_can)
         {
-            dev.process_messages();
+            dev.process();
         }
     }
 }
