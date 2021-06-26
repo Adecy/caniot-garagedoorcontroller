@@ -1,6 +1,7 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
+#include <avr/sleep.h>
 
 #include <mcp_can.h>
 #include <caniot/device.h>
@@ -16,12 +17,14 @@
 mcp2515_can can(SPI_CS_PIN);
 can_device dev(&can, CAN_INT_PIN, CAN_500KBPS, MCP_8MHz);
 
-uint32_t time_last = 0;
-uint32_t time;
-
 uint8_t command_handler(uint8_t buffer[8], uint8_t len)
 {
     PIND = (buffer[1] & 0xF) << 4 | (PIND & 0x0F);
+
+    usart_print("Received a CAN Garage Command : ");
+    usart_hex(buffer[0]);
+    usart_transmit('\n');
+
     return CANIOT_OK;
 }
 
@@ -30,6 +33,7 @@ uint8_t telemetry_builder(uint8_t buffer[8], uint8_t &len)
     buffer[0] = PINC & 0xF;
     buffer[1] = PIND >> 4;
     len = 4;
+    
     return CANIOT_OK;
 }
 
@@ -82,21 +86,15 @@ int main()
     dev.print_identification();
     dev.initialize();
 
+    debug_masks_filters();
+
     dev.set_telemetry_builder(telemetry_builder);
     dev.set_command_handler(command_handler);
 
-    dev. p_config->telemetry_period = 20; // sec
+    dev.p_config->telemetry_period = 20; // sec
     
     while (1)
     {
         dev.process();
-
-        // print updatime
-        time = dev.uptime();
-        if (time - time_last >= 10)
-        {
-            time_last = time;
-            print_time_sec(time);
-        }
     }
 }
