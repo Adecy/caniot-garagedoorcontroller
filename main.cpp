@@ -17,6 +17,6 @@ int main()
         
         controller.poll_doors_status();
         
-        _delay_ms(100);
+        _delay_ms(25);
     }
 }
