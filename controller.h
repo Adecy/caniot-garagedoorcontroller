@@ -18,6 +18,7 @@
 #define TELEMETRY_PERIOD            10*60
 
 #define DOOR_OPEN_CLOSE_DELAY_CS    20 * 100
+#define RELAY_TRIGGER_DELAY_MS      500
 
 /*___________________________________________________________________________*/
 
@@ -45,7 +46,6 @@ class GarageDoorController : public can_device
 protected:
     mcp2515_can can = mcp2515_can(SPI_CS_PIN);
 
-    
 public:
     door_t doors[2] = {
         {open, PORTC2, PIND3},

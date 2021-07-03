@@ -29,7 +29,7 @@ void GarageDoorController::initialize(void)
 
 uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
 {
-    GarageDoorController * ctrl = (GarageDoorController*) GarageDoorController::get_instance();
+    GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
     if (buffer[0] & 0b01)
     {
@@ -46,7 +46,7 @@ uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
 
 uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
 {
-    GarageDoorController * ctrl = (GarageDoorController*) GarageDoorController::get_instance();
+    GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
     buffer[1] |= (ctrl->doors[LEFT].state) | ((ctrl->doors[RIGHT].state) << 1);
     
@@ -61,7 +61,7 @@ void GarageDoorController::actuate(door_t &door)
 {
     PORTC |= 1 << door.relay_port;
 
-    _delay_ms(500);
+    _delay_ms(RELAY_TRIGGER_DELAY_MS);
 
     PORTC &= ~(1 << door.relay_port);
 }
