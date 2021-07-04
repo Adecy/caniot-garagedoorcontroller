@@ -24,7 +24,8 @@ void GarageDoorController::initialize(void)
 
     can_device::initialize();
 
-    p_config->telemetry_period = TELEMETRY_PERIOD;
+    // todo set in configuration
+    config.data.telemetry_period = TELEMETRY_PERIOD;
 }
 
 uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
