@@ -1,5 +1,42 @@
 #include "controller.h"
 
+/*___________________________________________________________________________*/
+
+static uint8_t pulse_finished_handler(void *event)
+{
+    const uint8_t relay_port = CONTAINER_OF(event, door_t, event)->relay_port;
+
+    PORTC &= ~(1 << relay_port);
+
+    return CANIOT_OK;
+}
+
+void GarageDoorController::actuate(door_t &door)
+{
+    PORTC |= 1 << door.relay_port;
+
+    schedule(door.event, RELAY_TRIGGER_DELAY_MS);
+}
+
+// we suppose that the doors are not moving down or up
+void GarageDoorController::poll_doors_status(void)
+{
+    for (uint_fast8_t idx = 0; idx < sizeof(doors) / sizeof(door_t); idx++)
+    {
+        door_state_t previous = doors[idx].state;
+
+        doors[idx].state = (door_state_t) (PIND >> doors[idx].contact_port);
+
+        // on state change, send a new telemetry message
+        if (doors[idx].state != previous)
+        {
+            SET_FLAG_TELEMETRY(flags);
+        }
+    }
+}
+
+/*___________________________________________________________________________*/
+
 void GarageDoorController::io_init(void)
 {
     // outputs relays
@@ -23,6 +60,9 @@ void GarageDoorController::initialize(void)
     set_telemetry_builder(telemetry_builder);
 
     can_device::initialize();
+
+    doors[LEFT].event.handler = pulse_finished_handler;
+    doors[RIGHT].event.handler = pulse_finished_handler;
 
     // todo set in configuration
     config.set_telemetry_period(TELEMETRY_PERIOD);
@@ -57,32 +97,4 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
     CANIOT_GET_LEN(len, CRT);
 
     return CANIOT_OK;
-}
-
-/*___________________________________________________________________________*/
-
-void GarageDoorController::actuate(door_t &door)
-{
-    PORTC |= 1 << door.relay_port;
-
-    _delay_ms(RELAY_TRIGGER_DELAY_MS);
-
-    PORTC &= ~(1 << door.relay_port);
-}
-
-// we suppose that the doors are not moving down or up
-void GarageDoorController::poll_doors_status(void)
-{
-    for (uint_fast8_t idx = 0; idx < sizeof(doors) / sizeof(door_t); idx++)
-    {
-        door_state_t previous = doors[idx].state;
-
-        doors[idx].state = (door_state_t) (PIND >> doors[idx].contact_port);
-
-        // on state change, send a new telemetry message
-        if (doors[idx].state != previous)
-        {
-            SET_FLAG_TELEMETRY(flags);
-        }
-    }
 }

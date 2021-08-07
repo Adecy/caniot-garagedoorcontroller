@@ -36,8 +36,8 @@ typedef struct
     door_state_t state;
     uint8_t relay_port;
     uint8_t contact_port;
+    event_t event; // pulse finished event
 } door_t;
-
 
 /*___________________________________________________________________________*/
 
@@ -70,5 +70,6 @@ private:
     static uint8_t telemetry_builder(uint8_t buffer[8], uint8_t &len);
 };
 
+/*___________________________________________________________________________*/
 
 #endif
