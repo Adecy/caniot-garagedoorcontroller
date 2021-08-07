@@ -25,19 +25,19 @@ void GarageDoorController::initialize(void)
     can_device::initialize();
 
     // todo set in configuration
-    config.data.telemetry_period = TELEMETRY_PERIOD;
+    config.set_telemetry_period(TELEMETRY_PERIOD);
 }
 
 uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
 {
     GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
-    if (buffer[0] & 0b01)
+    if (AS(buffer, CR_t)->relays.r1)
     {
         ctrl->actuate_left();
     }
 
-    if (buffer[0] & 0b10)
+    if (AS(buffer, CR_t)->relays.r2)
     {
         ctrl->actuate_right();
     }
@@ -49,8 +49,11 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
 {
     GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
-    buffer[1] |= (ctrl->doors[LEFT].state) | ((ctrl->doors[RIGHT].state) << 1);
-    
+    AS(buffer, CR_t)->contacts = {
+        .c1 = ctrl->doors[LEFT].state,
+        .c2 = ctrl->doors[RIGHT].state,
+    };
+
     CANIOT_GET_LEN(len, CRT);
 
     return CANIOT_OK;
