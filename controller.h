@@ -8,17 +8,16 @@
 #include <mcp_can.h>
 #include <caniot/device.h>
 #include <caniot/hw_init.h>
+#include <pcb1/custom.h>
 
 /*___________________________________________________________________________*/
 
-#define SPI_CS_PIN                  10
-#define CAN_INT_PIN                 2
-
 #define CAN_SPEED                   CAN_500KBPS
-#define TELEMETRY_PERIOD            10*60
 
-#define DOOR_OPEN_CLOSE_DELAY_CS    20 * 100
-#define RELAY_TRIGGER_DELAY_MS      500
+#define DOOR_OPEN_CLOSE_DELAY_CS    20*100
+#define RELAY_PULSE_DURATION_MS     1000
+
+#define TELEMETRY_PERIOD            15
 
 /*___________________________________________________________________________*/
 
@@ -41,10 +40,8 @@ typedef struct
 
 /*___________________________________________________________________________*/
 
-class GarageDoorController : public can_device
+class GarageDoorController : public CustomBoard
 {
-protected:
-    mcp2515_can can = mcp2515_can(SPI_CS_PIN);
 
 public:
     door_t doors[2] = {
@@ -52,15 +49,13 @@ public:
         {open, PORTC3, PIND4}
     };
 
-    GarageDoorController() : can_device(&can, CAN_INT_PIN, CAN_SPEED, MCP_8MHz) { }
+    GarageDoorController() : CustomBoard(CAN_SPEED, MCP_16MHz) { }
 
     void initialize(void);
 
     void poll_doors_status(void);
 
 protected:
-    void io_init(void);
-
     void actuate(door_t &door);
     inline void actuate_left(void) { actuate(doors[LEFT]); }
     inline void actuate_right(void) { actuate(doors[RIGHT]); }

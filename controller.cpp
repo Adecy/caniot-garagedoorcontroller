@@ -15,13 +15,13 @@ void GarageDoorController::actuate(door_t &door)
 {
     PORTC |= 1 << door.relay_port;
 
-    schedule(door.event, RELAY_TRIGGER_DELAY_MS);
+    schedule(door.event, RELAY_PULSE_DURATION_MS);
 }
 
 // we suppose that the doors are not moving down or up
 void GarageDoorController::poll_doors_status(void)
 {
-    for (uint_fast8_t idx = 0; idx < sizeof(doors) / sizeof(door_t); idx++)
+    for (uint_fast8_t idx = 0; idx < ARRAY_SIZE(doors); idx++)
     {
         door_state_t previous = doors[idx].state;
 
@@ -37,51 +37,31 @@ void GarageDoorController::poll_doors_status(void)
 
 /*___________________________________________________________________________*/
 
-void GarageDoorController::io_init(void)
-{
-    // outputs relays
-    DDRC |= (1 << PORTC2) | (1 << PORTC3);
-    PORTC &= ~((1 << PORTC2) | (1 << PORTC3));
-
-    // inputs
-    DDRD &= ~((1 << PORTD3) | (1 << PORTD4));
-    PORTD &= ~((1 << PORTD3) | (1 << PORTD4)); // disable pull up
-
-    poll_doors_status();
-}
-
 void GarageDoorController::initialize(void)
 {
-    hw_init();
-    io_init();
-    usart_init();
+    CustomBoard::initialize();
+
+    config.set_telemetry_period(TELEMETRY_PERIOD);
 
     set_command_handler(command_handler);
     set_telemetry_builder(telemetry_builder);
 
-    can_device::initialize();
-
     doors[LEFT].event.handler = pulse_finished_handler;
     doors[RIGHT].event.handler = pulse_finished_handler;
 
-    // todo set in configuration
-    config.set_telemetry_period(TELEMETRY_PERIOD);
+    poll_doors_status();
 }
 
 uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
 {
     GarageDoorController * ctrl = (GarageDoorController*) get_instance();
-
-    if (AS(buffer, CR_t)->relays.r1)
-    {
+    
+    if (AS(buffer, CR_t)->relays.r1) {
         ctrl->actuate_left();
     }
-
-    if (AS(buffer, CR_t)->relays.r2)
-    {
+    if (AS(buffer, CR_t)->relays.r2) {
         ctrl->actuate_right();
     }
-
     return CANIOT_OK;
 }
 
@@ -89,12 +69,12 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
 {
     GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
-    AS(buffer, CR_t)->contacts = {
+    AS(buffer, CRTAAA_t)->contacts = {
         .c1 = ctrl->doors[LEFT].state,
         .c2 = ctrl->doors[RIGHT].state,
     };
-
-    CANIOT_GET_LEN(len, CRT);
+    AS(buffer, CRTAAA_t)->temperature = ctrl->read_temperature();
+    CANIOT_SET_LEN(len, CRTAAA);
 
     return CANIOT_OK;
 }
