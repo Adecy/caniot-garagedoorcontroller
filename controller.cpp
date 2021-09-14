@@ -2,7 +2,7 @@
 
 /*___________________________________________________________________________*/
 
-static uint8_t pulse_finished_handler(void *event)
+static uint8_t pulse_finished_handler(struct event_t *event)
 {
     const uint8_t relay_port = CONTAINER_OF(event, door_t, event)->relay_port;
 

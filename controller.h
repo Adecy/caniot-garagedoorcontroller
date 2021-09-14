@@ -17,7 +17,7 @@
 #define DOOR_OPEN_CLOSE_DELAY_CS    20*100
 #define RELAY_PULSE_DURATION_MS     500
 
-#define TELEMETRY_PERIOD            15
+#define TELEMETRY_PERIOD            1*60
 
 /*___________________________________________________________________________*/
 

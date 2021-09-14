@@ -2,6 +2,8 @@
 #include <util/delay.h>
 #include <uart.h>
 
+#include <avr/sleep.h>
+
 #include "controller.h"
 
 GarageDoorController controller = GarageDoorController();
@@ -9,14 +11,14 @@ GarageDoorController controller = GarageDoorController();
 int main()
 {
     controller.initialize();
-    controller.print_identification();    
+    controller.print_identification();
     
     while (1)
     {
         controller.process();
-        
         controller.poll_doors_status();
         
-        _delay_ms(25);
+        // sleep for 10ms
+        sleep_mode();
     }
 }
