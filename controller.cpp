@@ -6,7 +6,7 @@ static uint8_t pulse_finished_handler(struct event_t *event)
 {
     const uint8_t relay_port = CONTAINER_OF(event, door_t, event)->relay_port;
 
-    PORTC &= ~(1 << relay_port);
+    CLR_BIT(PORTC, 1 << relay_port);
 
     return CANIOT_OK;
 }
@@ -27,7 +27,7 @@ void GarageDoorController::poll_doors_status(void)
 
         /* on state change, send a new telemetry message */
         if (doors[idx].state != previous) {
-            SET_FLAG_TELEMETRY(flags);
+            request_telemetry();
         }
     }
 }
@@ -39,6 +39,8 @@ void GarageDoorController::initialize(void)
     CustomBoard::initialize();
 
     config.set_telemetry_period(TELEMETRY_PERIOD);
+    config.data->telemetry_rdm_delay = SEC_TO_MS(3);
+    config.data->telemetry_min = 500;
 
     set_command_handler(command_handler);
     set_telemetry_builder(telemetry_builder);
@@ -69,7 +71,7 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
     AS(buffer, CRTAAA_t)->contacts.c1 = ctrl->doors[RIGHT].state;
     AS(buffer, CRTAAA_t)->contacts.value = ctrl->read_inputs();
     AS(buffer, CRTAAA_t)->temperature = ctrl->read_temperature();
-    CANIOT_SET_LEN(len, CRTAAA);
+    len = CANIOT_GET_LEN(CRTAAA);
 
     return CANIOT_OK;
 }
