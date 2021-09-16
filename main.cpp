@@ -15,8 +15,8 @@ int main()
     
     while (1)
     {
-        controller.process();
         controller.poll_doors_status();
+        controller.process();
         
         // sleep for 10ms
         sleep_mode();

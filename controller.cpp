@@ -49,6 +49,12 @@ void GarageDoorController::initialize(void)
     doors[RIGHT].event.handler = pulse_finished_handler;
 
     poll_doors_status();
+
+    /* clear telemetry flag if set by poll_doors_status */
+    CLEAR_FLAG_TELEMETRY(flags);
+
+    /* send telemetry on start up */
+    schedule_random_telemetry();
 }
 
 uint8_t GarageDoorController::command_handler(uint8_t buffer[8], uint8_t len)
@@ -68,7 +74,7 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
     GarageDoorController * ctrl = (GarageDoorController*) get_instance();
 
     AS(buffer, CRTAAA_t)->contacts.c1 = ctrl->doors[LEFT].state;
-    AS(buffer, CRTAAA_t)->contacts.c1 = ctrl->doors[RIGHT].state;
+    AS(buffer, CRTAAA_t)->contacts.c2 = ctrl->doors[RIGHT].state;
     AS(buffer, CRTAAA_t)->contacts.value = ctrl->read_inputs();
     AS(buffer, CRTAAA_t)->temperature = ctrl->read_temperature();
     len = CANIOT_GET_LEN(CRTAAA);
