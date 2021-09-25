@@ -14,27 +14,27 @@
 
 #define CAN_SPEED                   CAN_500KBPS
 
-#define DOOR_OPEN_CLOSE_DELAY_CS    20*100
 #define RELAY_PULSE_DURATION_MS     500
 
-#define TELEMETRY_PERIOD            1*60    // ms
+#define TELEMETRY_PERIOD            5*60    // s
 
 /*___________________________________________________________________________*/
 
-#define LEFT 0
-#define RIGHT 1
+#define LEFT    0
+#define RIGHT   1
+#define GATE    2
 
 enum door_state_t : uint8_t
 {
-    open = 0,
-    close = 1,
+    open = 1,
+    close = 0,
 };
 
 typedef struct
 {
     door_state_t state;
     uint8_t relay_port;
-    uint8_t contact_port;
+    uint8_t inx;
     event_t event; // pulse finished event
 } door_t;
 
@@ -44,9 +44,10 @@ class GarageDoorController : public CustomBoard
 {
 
 public:
-    door_t doors[2] = {
-        {open, PORTC2, IN2_PORT},  // IN0
-        {open, PORTC3, IN3_PORT}   // IN1
+    door_t doors[3] = {
+        {open, PORTC2, IN2},
+        {open, PORTC3, IN3},
+        {open, 0xFF, IN1},
     };
 
     GarageDoorController() : CustomBoard(CAN_SPEED, MCP_16MHz) { }

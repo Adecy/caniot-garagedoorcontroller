@@ -21,9 +21,10 @@ void GarageDoorController::actuate(door_t &door)
 // we suppose that the doors are not moving down or up
 void GarageDoorController::poll_doors_status(void)
 {
+    const uint8_t inputs = read_inputs();
     for (uint_fast8_t idx = 0; idx < ARRAY_SIZE(doors); idx++) {
         door_state_t previous = doors[idx].state;
-        doors[idx].state = (door_state_t)(PIND >> doors[idx].contact_port);
+        doors[idx].state = (door_state_t) ((inputs >> doors[idx].inx) & 1);
 
         /* on state change, send a new telemetry message */
         if (doors[idx].state != previous) {
@@ -75,7 +76,7 @@ uint8_t GarageDoorController::telemetry_builder(uint8_t buffer[8], uint8_t &len)
 
     AS(buffer, CRTAAA_t)->contacts.c1 = ctrl->doors[LEFT].state;
     AS(buffer, CRTAAA_t)->contacts.c2 = ctrl->doors[RIGHT].state;
-    AS(buffer, CRTAAA_t)->contacts.value = ctrl->read_inputs();
+    AS(buffer, CRTAAA_t)->contacts.c3 = ctrl->doors[GATE].state;
     AS(buffer, CRTAAA_t)->temperature = ctrl->read_temperature();
     len = CANIOT_GET_LEN(CRTAAA);
 
